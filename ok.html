@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Segregation Bar Graph</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+    <div id="graph" style="width:100%;height:500px;"></div>
+
+    <script>
+        // Replace with your ThingSpeak API URL
+        const feedURL = "https://api.thingspeak.com/channels/2657179/feeds.json?api_key=GZZLHCC6OE7YVMJ4&results=100"; // Get the last 100 feed entries
+
+        // Fetch the ThingSpeak feed
+        fetch(feedURL)
+            .then(response => response.json())  // Convert response to JSON
+            .then(data => {
+                // Extract the waste levels from the feeds
+                let dryWaste = 0;
+                let wetWaste = 0;
+                let metalWaste = 0;
+                let mixedWaste = 0;
+
+                // Loop through the data and aggregate the values for each type of waste
+                data.feeds.forEach(feed => {
+                    dryWaste += parseInt(feed.field1 || 0);   // Accumulate Dry Waste (field1)
+                    wetWaste += parseInt(feed.field2 || 0);   // Accumulate Wet Waste (field2)
+                    metalWaste += parseInt(feed.field3 || 0); // Accumulate Metal Waste (field3)
+                    mixedWaste += parseInt(feed.field4 || 0); // Accumulate Mixed Waste (field4)
+                });
+
+                // Data for the bar chart
+                const wasteTypes = ['Dry Waste', 'Wet Waste', 'Metal Waste', 'Mixed Waste'];
+                const wasteLevels = [dryWaste, wetWaste, metalWaste, mixedWaste];
+
+                // Prepare data for Plotly bar graph
+                const trace = {
+                    x: wasteTypes,            // Waste types (x-axis)
+                    y: wasteLevels,           // Levels of each waste type (y-axis)
+                    type: 'bar',              // Type of graph (bar)
+                    marker: {
+                        color: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'] // Colors for the bars
+                    }
+                };
+
+                // Set up the layout for the graph
+                const layout = {
+                    title: 'Waste Segregation Levels',
+                    xaxis: {
+                        title: 'Waste Types'
+                    },
+                    yaxis: {
+                        title: 'Waste Level'
+                    },
+                    showlegend: false
+                };
+
+                // Plot the graph using Plotly
+                Plotly.newPlot('graph', [trace], layout);
+            })
+            .catch(error => {
+                console.error("Error fetching data from ThingSpeak: ", error);
+            });
+    </script>
+
+</body>
+</html>
